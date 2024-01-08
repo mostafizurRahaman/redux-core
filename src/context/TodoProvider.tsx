@@ -1,47 +1,54 @@
 import { createContext, useReducer } from "react";
 
-//  * create a context :
-export const ToDoContext = createContext({} as TContextValue);
+export const ToDoContext = createContext({} as TContextProvider);
 
-// * define a type for context Values:
-type TContextValue = {
+// ** create type for context:
+
+type TContextProvider = {
    state: TTodo[];
    dispatch: React.Dispatch<TAction>;
 };
+// ** create a type for context provider :
+interface IContextProvider {
+   children: React.ReactNode;
+}
 
-// ** interface a Todo:
-type TTodo = {
+// ** Declare type for initialState:
+export type TTodo = {
    id: string;
    title: string;
    isCompleted: boolean;
 };
 
-// ** action type:
-
+// ** declare an action type:
 type TAction = {
-   type: "addToDo";
-   payload: TTodo;
+   type: "addTodo" | "complete";
+   payload: TTodo | string;
 };
-// ** define the initialState :
+
+// ** define initial state:
 const initialState: TTodo[] = [];
 
-// ** define the reducer function:
+// ** define a reducer function:
+
 const reducer = (currentState: TTodo[], action: TAction) => {
    switch (action.type) {
-      case "addToDo":
-         return [...currentState, action.payload];
+      case "addTodo":
+         return [...currentState, action.payload as TTodo];
+      case "complete":
+         return currentState.map((item) => {
+            return item.id === action.payload
+               ? { ...item, isCompleted: !item.isCompleted }
+               : item;
+         });
       default:
          return currentState;
    }
 };
-
-const TodoProvider = ({ children }: { children: React.ReactNode }) => {
+const TodoProvider = ({ children }: IContextProvider) => {
    const [state, dispatch] = useReducer(reducer, initialState);
-   const values: TContextValue = {
-      state,
-      dispatch,
-   };
 
+   const values: TContextProvider = { state, dispatch };
    return (
       <ToDoContext.Provider value={values}>{children}</ToDoContext.Provider>
    );
